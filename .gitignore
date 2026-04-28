@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.env
+output/*.pdf
+data/invoice_generator.db
+google_client_secret.json
+google_token.json
