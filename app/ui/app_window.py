@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import tkinter as tk
+import subprocess
+import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
@@ -1970,7 +1972,19 @@ class InvoiceGeneratorApp(tk.Tk):
             messagebox.showwarning("Missing", "PDF file path exists in DB but file is missing.")
             return
 
-        os.startfile(str(pdf_file))
+        self._open_file(pdf_file)
+
+    @staticmethod
+    def _open_file(path: Path) -> None:
+        try:
+            if sys.platform == "win32":
+                os.startfile(str(path))
+            elif sys.platform == "darwin":
+                subprocess.run(["open", str(path)], check=True)
+            else:
+                subprocess.run(["xdg-open", str(path)], check=True)
+        except Exception as exc:
+            messagebox.showerror("Open Failed", f"Could not open file:\n{exc}")
 
     @staticmethod
     def _parse_positive_number(value: str, field_name: str) -> float | None:

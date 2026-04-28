@@ -2,7 +2,6 @@ from app.config import ensure_runtime_directories
 from app.database import DatabaseManager
 from app.ui.app_window import InvoiceGeneratorApp
 
-
 def main() -> None:
     ensure_runtime_directories()
 
