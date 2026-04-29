@@ -62,8 +62,8 @@ class PDFService:
             logo_y = current_y - logo_height
             c.drawImage(
                 logo_path,
-                margin_x,
-                logo_y,
+                margin_x * 0.4,
+                logo_y + 0.3 * inch,
                 width=logo_width,
                 height=logo_height,
                 preserveAspectRatio=True,
@@ -76,7 +76,7 @@ class PDFService:
         c.drawRightString(width - margin_x, title_y, "INVOICE")
         current_y = min(current_y, title_y - 0.35 * inch)
 
-        business_name = business.get("business_name") or "Your Cleaning Business"
+        business_name = business.get("business_name") or ""
         c.setFont("Helvetica-Bold", 12)
         c.drawString(margin_x, current_y, business_name)
 
@@ -126,7 +126,6 @@ class PDFService:
         table_width = table_right - table_left
 
         col_description = table_left
-        col_quantity = table_left + table_width * 0.56
         col_rate = table_left + table_width * 0.68
         col_total = table_left + table_width * 0.82
 
@@ -136,9 +135,8 @@ class PDFService:
 
         c.setFont("Helvetica-Bold", 10)
         c.drawString(col_description + 2, current_y - 0.13 * inch, "Service Description")
-        c.drawString(col_quantity + 2, current_y - 0.13 * inch, "Qty")
-        c.drawString(col_rate + 2, current_y - 0.13 * inch, "Rate")
-        c.drawString(col_total + 2, current_y - 0.13 * inch, "Line Total")
+        c.drawString(col_rate + 40, current_y - 0.13 * inch, "Rate")
+        c.drawString(col_total + 35, current_y - 0.13 * inch, "Line Total")
 
         current_y -= 0.26 * inch
         c.setFont("Helvetica", 10)
@@ -151,7 +149,6 @@ class PDFService:
 
             description = str(item["description"])[:58]
             c.drawString(col_description + 2, current_y - 0.12 * inch, description)
-            c.drawRightString(col_rate - 8, current_y - 0.12 * inch, f"{float(item.get('quantity', 1)):,.2f}")
             c.drawRightString(col_total - 8, current_y - 0.12 * inch, format_usd(float(item["unit_price"])))
             c.drawRightString(table_right - 8, current_y - 0.12 * inch, format_usd(float(item["line_total"])))
             current_y -= 0.19 * inch
