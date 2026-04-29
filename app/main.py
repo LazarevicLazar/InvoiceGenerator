@@ -9,4 +9,8 @@ def main() -> None:
     db.initialize()
 
     app = InvoiceGeneratorApp(db)
+    try:
+        app.iconbitmap("data/icon.ico")
+    except Exception:
+        pass
     app.mainloop()

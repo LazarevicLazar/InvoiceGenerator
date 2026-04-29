@@ -11,19 +11,23 @@ class CustomerService:
         rows = self.db.fetchall(
             """
             SELECT
-                id,
-                name,
-                email,
-                phone,
-                sms_gateway,
-                bedrooms,
-                bathrooms,
-                square_feet,
-                cleaning_duration,
-                address,
-                notes
-            FROM customers
-            ORDER BY name COLLATE NOCASE ASC
+                c.id,
+                c.name,
+                c.email,
+                c.phone,
+                c.sms_gateway,
+                c.bedrooms,
+                c.bathrooms,
+                c.square_feet,
+                c.cleaning_duration,
+                c.frequency,
+                c.address,
+                c.notes,
+                MAX(i.issue_date) AS last_invoice_date
+            FROM customers c
+            LEFT JOIN invoices i ON i.customer_id = c.id
+            GROUP BY c.id
+            ORDER BY c.name COLLATE NOCASE ASC
             """
         )
         return [dict(row) for row in rows]
@@ -40,6 +44,7 @@ class CustomerService:
         address: str,
         notes: str = "",
         sms_gateway: str = "",
+        frequency: str = "Single",
     ) -> int:
         now = datetime.now().isoformat(timespec="seconds")
         return self.db.execute(
@@ -47,9 +52,9 @@ class CustomerService:
             INSERT INTO customers (
                 name, email, phone, sms_gateway,
                 bedrooms, bathrooms, square_feet, cleaning_duration,
-                address, notes, created_at, updated_at
+                frequency, address, notes, created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 name.strip(),
@@ -60,6 +65,7 @@ class CustomerService:
                 bathrooms.strip(),
                 square_feet.strip(),
                 cleaning_duration.strip(),
+                frequency.strip(),
                 address.strip(),
                 notes.strip(),
                 now,
@@ -80,6 +86,7 @@ class CustomerService:
         address: str,
         notes: str = "",
         sms_gateway: str = "",
+        frequency: str = "Single",
     ) -> None:
         now = datetime.now().isoformat(timespec="seconds")
         self.db.execute(
@@ -94,6 +101,7 @@ class CustomerService:
                 bathrooms = ?,
                 square_feet = ?,
                 cleaning_duration = ?,
+                frequency = ?,
                 address = ?,
                 notes = ?,
                 updated_at = ?
@@ -108,6 +116,7 @@ class CustomerService:
                 bathrooms.strip(),
                 square_feet.strip(),
                 cleaning_duration.strip(),
+                frequency.strip(),
                 address.strip(),
                 notes.strip(),
                 now,
@@ -143,17 +152,9 @@ class CustomerService:
         row = self.db.fetchone(
             """
             SELECT
-                id,
-                name,
-                email,
-                phone,
-                sms_gateway,
-                bedrooms,
-                bathrooms,
-                square_feet,
-                cleaning_duration,
-                address,
-                notes
+                id, name, email, phone, sms_gateway,
+                bedrooms, bathrooms, square_feet, cleaning_duration,
+                frequency, address, notes
             FROM customers
             WHERE id = ?
             """,

@@ -150,6 +150,7 @@ class DatabaseManager:
         self._ensure_column(connection, "customers", "cleaning_duration", "TEXT NOT NULL DEFAULT ''")
         self._ensure_column(connection, "cleaners", "google_calendar_id", "TEXT NOT NULL DEFAULT ''")
         self._ensure_column(connection, "jobs", "google_event_id", "TEXT NOT NULL DEFAULT ''")
+        self._ensure_column(connection, "customers", "frequency", "TEXT NOT NULL DEFAULT 'Single'")
 
     def _ensure_column(
         self,

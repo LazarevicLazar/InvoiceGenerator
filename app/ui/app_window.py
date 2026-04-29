@@ -44,6 +44,7 @@ class InvoiceGeneratorApp(tk.Tk):
         self.current_items: list[dict] = []
         self.calendar_jobs_cache: list[dict] = []
         self.calendar_anchor_date = date.today()
+        self.customer_frequency_var = tk.StringVar(value="Single")
 
         self.cleaners_popup: tk.Toplevel | None = None
         self.google_popup: tk.Toplevel | None = None
@@ -131,6 +132,16 @@ class InvoiceGeneratorApp(tk.Tk):
         ttk.Label(job_frame, text="Cleaning Duration").grid(row=1, column=2, sticky="w", padx=6, pady=4)
         ttk.Entry(job_frame, textvariable=self.customer_cleaning_duration_var).grid(row=1, column=3, sticky="ew", padx=6, pady=4)
 
+        ttk.Label(job_frame, text="Frequency").grid(row=2, column=2, sticky="w", padx=6, pady=4)
+        frequency_combo = ttk.Combobox(
+            job_frame,
+            textvariable=self.customer_frequency_var,
+            values=("Single", "Weekly", "Bi-Weekly", "Monthly", "Bi-Monthly"),
+            state="readonly",
+            width=14,
+        )
+        frequency_combo.grid(row=2, column=3, sticky="ew", padx=6, pady=4)
+
         ttk.Label(form, text="Address").grid(row=3, column=0, sticky="w", padx=6, pady=4)
         ttk.Entry(form, textvariable=self.customer_address_var).grid(row=3, column=1, sticky="ew", padx=6, pady=4)
 
@@ -153,19 +164,29 @@ class InvoiceGeneratorApp(tk.Tk):
         table.columnconfigure(0, weight=1)
         table.rowconfigure(0, weight=1)
 
-        columns = ("id", "name", "email", "phone", "address")
+        columns = ("id", "name", "email", "phone", "address", "frequency", "last_clean")
         self.customers_tree = ttk.Treeview(table, columns=columns, show="headings", height=18)
         self.customers_tree.heading("id", text="ID")
         self.customers_tree.heading("name", text="Name")
         self.customers_tree.heading("email", text="Email")
         self.customers_tree.heading("phone", text="Phone")
         self.customers_tree.heading("address", text="Address")
+        self.customers_tree.heading("frequency", text="Frequency")
+        self.customers_tree.heading("last_clean", text="Last Clean")
 
-        self.customers_tree.column("id", width=60, anchor="center")
-        self.customers_tree.column("name", width=180)
-        self.customers_tree.column("email", width=220)
-        self.customers_tree.column("phone", width=130)
-        self.customers_tree.column("address", width=290)
+        self.customers_tree.column("id", width=45, anchor="center")
+        self.customers_tree.column("name", width=160)
+        self.customers_tree.column("email", width=200)
+        self.customers_tree.column("phone", width=110)
+        self.customers_tree.column("address", width=220)
+        self.customers_tree.column("frequency", width=90, anchor="center")
+        self.customers_tree.column("last_clean", width=100, anchor="center")
+
+        self.customers_tree.tag_configure("Single", background="#ffffff")
+        self.customers_tree.tag_configure("Weekly", background="#c8e6c9")
+        self.customers_tree.tag_configure("Bi-Weekly", background="#bbdefb")
+        self.customers_tree.tag_configure("Monthly", background="#fff9c4")
+        self.customers_tree.tag_configure("Bi-Monthly", background="#e1bee7")
 
         self.customers_tree.grid(row=0, column=0, sticky="nsew")
         self.customers_tree.bind("<<TreeviewSelect>>", self._on_customer_selected)
@@ -1027,6 +1048,7 @@ class InvoiceGeneratorApp(tk.Tk):
         bathrooms = self.customer_bathrooms_var.get().strip()
         square_feet = self.customer_square_feet_var.get().strip()
         cleaning_duration = self.customer_cleaning_duration_var.get().strip()
+        frequency = self.customer_frequency_var.get().strip()
         address = self.customer_address_var.get().strip()
         notes = self.customer_notes_text.get("1.0", tk.END).strip()
 
@@ -1048,6 +1070,7 @@ class InvoiceGeneratorApp(tk.Tk):
             "bathrooms": bathrooms,
             "square_feet": square_feet,
             "cleaning_duration": cleaning_duration,
+            "frequency": frequency,
             "address": address,
             "notes": notes,
         }
@@ -1062,6 +1085,7 @@ class InvoiceGeneratorApp(tk.Tk):
         self.customer_square_feet_var.set("")
         self.customer_cleaning_duration_var.set("")
         self.customer_address_var.set("")
+        self.customer_frequency_var.set("Single")
         self.customer_notes_text.delete("1.0", tk.END)
 
     def _on_customer_selected(self, _event: tk.Event) -> None:
@@ -1085,11 +1109,13 @@ class InvoiceGeneratorApp(tk.Tk):
         self.customer_cleaning_duration_var.set(customer["cleaning_duration"])
 
         self.customer_address_var.set(customer["address"])
-
+        self.customer_frequency_var.set(customer.get("frequency") or "Single")
         self.customer_notes_text.delete("1.0", tk.END)
         self.customer_notes_text.insert("1.0", customer["notes"])
 
     def _load_customers(self) -> None:
+        from datetime import date as date_type
+
         rows = self.customer_service.list_customers()
 
         for item in self.customers_tree.get_children():
@@ -1099,12 +1125,28 @@ class InvoiceGeneratorApp(tk.Tk):
         self.customer_lookup.clear()
         self.calendar_customer_lookup.clear()
 
+        today = date_type.today()
+
         for row in rows:
             one_line_address = row["address"].replace("\n", " ")
+            frequency = row.get("frequency") or "Single"
+
+            last_invoice_date = row.get("last_invoice_date")
+            if last_invoice_date:
+                try:
+                    last_date = date_type.fromisoformat(last_invoice_date)
+                    days_ago = (today - last_date).days
+                    last_clean = f"{days_ago}d ago"
+                except ValueError:
+                    last_clean = "—"
+            else:
+                last_clean = "Never"
+
             self.customers_tree.insert(
                 "",
                 tk.END,
-                values=(row["id"], row["name"], row["email"], row["phone"], one_line_address),
+                values=(row["id"], row["name"], row["email"], row["phone"], one_line_address, frequency, last_clean),
+                tags=(frequency,),
             )
             label = f"{row['id']} - {row['name']} <{row['email']}>"
             customer_labels.append(label)
@@ -1770,6 +1812,7 @@ class InvoiceGeneratorApp(tk.Tk):
             sms_delivery_gateways = self._send_invoice_sms(invoice_id)
 
         self._load_invoices()
+        self._load_customers()
         self._reset_invoice_form()
 
         if mode == "draft":

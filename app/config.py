@@ -1,12 +1,12 @@
 from pathlib import Path
 
-APP_NAME = "Cleaning Invoice Generator"
+APP_NAME = "LedgerWorks"
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 OUTPUT_DIR = BASE_DIR / "output"
 DB_PATH = DATA_DIR / "invoice_generator.db"
 DATE_FORMAT = "%Y-%m-%d"
-DEFAULT_DUE_DAYS = 14
+DEFAULT_DUE_DAYS = 7
 
 DEFAULT_SETTINGS = {
     "business_name": "",
