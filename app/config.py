@@ -24,6 +24,14 @@ DEFAULT_SETTINGS = {
     "smtp_use_tls": "1",
     "google_credentials_file": str(DATA_DIR / "google_client_secret.json"),
     "google_token_file": str(DATA_DIR / "google_token.json"),
+    "email_invoice_template": (
+        "Hi {customer_name},\n\n"
+        "Please find attached invoice {invoice_number}.\n"
+        "Total Due: ${total_amount:,.2f}\n"
+        "Due Date: {due_date}\n\n"
+        "Thank you for choosing {business_name}.\n"
+    ),
+    "invoice_numbering_scheme": "by_year",
 }
 
 

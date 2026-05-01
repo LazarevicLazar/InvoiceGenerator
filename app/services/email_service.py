@@ -32,18 +32,30 @@ class EmailService:
 
         business_name = settings.get("business_name", "Your Cleaning Business").strip() or "Your Cleaning Business"
 
+        # Get email template from settings, with fallback to default
+        email_template = settings.get("email_invoice_template", "").strip()
+        if not email_template:
+            email_template = (
+                "Hi {customer_name},\n\n"
+                "Please find attached invoice {invoice_number}.\n"
+                "Total Due: ${total_amount:,.2f}\n"
+                "Due Date: {due_date}\n\n"
+                "Thank you for choosing {business_name}.\n"
+            )
+
+        # Format template with invoice details
+        message_body = email_template.format(
+            customer_name=customer_name,
+            invoice_number=invoice_number,
+            total_amount=total_amount,
+            due_date=due_date,
+            business_name=business_name,
+        )
+
         message = EmailMessage()
         message["From"] = from_email
         message["To"] = recipient_email
         message["Subject"] = f"Invoice {invoice_number} from {business_name}"
-
-        message_body = (
-            f"Hi {customer_name},\n\n"
-            f"Please find attached invoice {invoice_number}.\n"
-            f"Total Due: ${total_amount:,.2f}\n"
-            f"Due Date: {due_date}\n\n"
-            f"Thank you for choosing {business_name}.\n"
-        )
         message.set_content(message_body)
 
         pdf_bytes = pdf_file.read_bytes()
