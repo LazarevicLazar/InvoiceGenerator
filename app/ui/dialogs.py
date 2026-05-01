@@ -446,6 +446,7 @@ def add_cleaner(app) -> None:
         google_calendar_id=google_calendar_id,
     )
     load_cleaners(app)
+    app._refresh_live_views()
     clear_cleaner_form(app)
     if google_calendar_id:
         messagebox.showinfo("Cleaner", "Cleaner added and linked to Google Calendar.")
@@ -472,6 +473,7 @@ def update_cleaner(app) -> None:
         google_calendar_id=app.cleaner_google_calendar_id_var.get().strip(),
     )
     load_cleaners(app)
+    app._refresh_live_views()
     messagebox.showinfo("Cleaner", "Cleaner updated.")
 
 
@@ -524,6 +526,7 @@ def delete_cleaner(app) -> None:
         return
 
     load_cleaners(app)
+    app._refresh_live_views()
     clear_cleaner_form(app)
     messagebox.showinfo("Cleaner", "Cleaner deleted.")
 
@@ -720,6 +723,7 @@ def schedule_job(app) -> None:
             )
 
     load_jobs(app)
+    app._refresh_live_views()
     messagebox.showinfo("Job", "Job scheduled successfully.")
 
 
@@ -745,6 +749,7 @@ def update_selected_job_status(app, status: str) -> None:
 
     app.calendar_service.update_job_status(job_id, status)
     load_jobs(app)
+    app._refresh_live_views()
     messagebox.showinfo("Job", f"Job updated to '{status}'.")
 
 
@@ -771,6 +776,7 @@ def delete_selected_job(app) -> None:
 
     app.calendar_service.delete_job(job_id)
     load_jobs(app)
+    app._refresh_live_views()
     messagebox.showinfo("Job", "Job deleted.")
 
 

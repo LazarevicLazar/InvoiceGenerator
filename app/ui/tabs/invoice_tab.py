@@ -266,6 +266,7 @@ def save_invoice(app, mode: str) -> None:
     app._load_invoices()
     from app.ui.tabs.customers_tab import load_customers
     load_customers(app)
+    app._refresh_live_views()
     reset_invoice_form(app)
 
     if mode == "draft":

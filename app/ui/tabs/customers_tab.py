@@ -128,6 +128,7 @@ def add_customer(app) -> None:
 
     app.customer_service.create_customer(**payload)
     load_customers(app)
+    app._refresh_live_views()
     clear_customer_form(app)
     messagebox.showinfo("Customer", "Customer added.")
 
@@ -144,6 +145,7 @@ def update_customer(app) -> None:
 
     app.customer_service.update_customer(int(app.customer_id_var.get()), **payload)
     load_customers(app)
+    app._refresh_live_views()
     messagebox.showinfo("Customer", "Customer updated.")
 
 
@@ -166,6 +168,7 @@ def delete_customer(app) -> None:
         return
 
     load_customers(app)
+    app._refresh_live_views()
     clear_customer_form(app)
 
 
@@ -211,6 +214,7 @@ def delete_customer_with_invoices(app) -> None:
 
     load_customers(app)
     app._load_invoices()
+    app._refresh_live_views()
     clear_customer_form(app)
     messagebox.showinfo(
         "Deleted",

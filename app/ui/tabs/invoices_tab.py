@@ -130,6 +130,7 @@ def generate_pdf_for_selected(app) -> None:
         return
 
     load_invoices(app)
+    app._refresh_live_views()
     messagebox.showinfo("PDF", f"PDF generated:\n{pdf_path}")
 
 
@@ -146,6 +147,7 @@ def send_selected_invoice(app) -> None:
         return
 
     load_invoices(app)
+    app._refresh_live_views()
     messagebox.showinfo("Email", "Invoice email sent.")
 
 
@@ -162,6 +164,7 @@ def send_selected_sms(app) -> None:
         return
 
     load_invoices(app)
+    app._refresh_live_views()
     messagebox.showinfo(
         "Text",
         (
@@ -270,6 +273,7 @@ def mark_selected_paid(app) -> None:
 
     app.invoice_service.mark_paid(invoice_id)
     load_invoices(app)
+    app._refresh_live_views()
     messagebox.showinfo("Invoice", "Invoice marked as paid.")
 
 
@@ -292,6 +296,7 @@ def delete_selected_invoice(app) -> None:
 
     app.invoice_service.delete_invoice(invoice_id)
     load_invoices(app)
+    app._refresh_live_views()
     messagebox.showinfo("Invoice", f"Invoice {invoice_number} deleted.")
 
 
