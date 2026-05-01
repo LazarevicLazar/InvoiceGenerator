@@ -91,11 +91,14 @@ class InvoiceGeneratorApp(tk.Tk):
         self.cleaners_popup: tk.Toplevel | None = None
         self.google_popup: tk.Toplevel | None = None
         self.schedule_popup: tk.Toplevel | None = None
+        self._refresh_interval_ms = 15_000
+        self._refresh_job_id: str | None = None
 
         # Configure window
         self.title(APP_NAME)
         self.geometry("1280x780")
         self.minsize(1100, 680)
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
 
         # Build UI
         self._build_ui()
@@ -109,6 +112,7 @@ class InvoiceGeneratorApp(tk.Tk):
         load_invoices(self)
         reset_job_form(self)
         refresh_dashboard(self)
+        self._schedule_periodic_refresh()
 
     def _build_ui(self) -> None:
         """Build the main UI with all tabs."""
@@ -241,3 +245,46 @@ class InvoiceGeneratorApp(tk.Tk):
     def _send_invoice_sms(self, invoice_id: int) -> list[str]:
         """Send invoice via SMS."""
         return send_invoice_sms(self, invoice_id)
+
+    def _refresh_live_views(self) -> None:
+        """Refresh the UI sections that reflect live database values."""
+        load_customers(self)
+        load_cleaners(self)
+        load_jobs(self)
+        load_invoices(self)
+        refresh_dashboard(self)
+        self._refresh_google_status()
+
+    def _schedule_periodic_refresh(self) -> None:
+        """Schedule the next automatic refresh cycle."""
+        if self._refresh_job_id is not None:
+            try:
+                self.after_cancel(self._refresh_job_id)
+            except tk.TclError:
+                pass
+
+        self._refresh_job_id = self.after(self._refresh_interval_ms, self._run_periodic_refresh)
+
+    def _run_periodic_refresh(self) -> None:
+        """Refresh live views and re-arm the timer."""
+        self._refresh_job_id = None
+
+        if not self.winfo_exists():
+            return
+
+        try:
+            self._refresh_live_views()
+        finally:
+            if self.winfo_exists():
+                self._schedule_periodic_refresh()
+
+    def _on_close(self) -> None:
+        """Cancel timers and close the application."""
+        if self._refresh_job_id is not None:
+            try:
+                self.after_cancel(self._refresh_job_id)
+            except tk.TclError:
+                pass
+            self._refresh_job_id = None
+
+        self.destroy()
