@@ -6,11 +6,6 @@ from tkinter import messagebox, simpledialog, ttk
 
 from app.services.google_calendar_service import GoogleCalendarService
 from app.ui.constants import CALENDAR_DATETIME_FORMAT
-from app.ui.tabs.calendar_tab import (
-    configure_calendar_columns,
-    refresh_calendar_view,
-)
-from app.ui.tabs.customers_tab import load_customers
 
 
 def open_cleaners_popup(app) -> None:
@@ -218,7 +213,7 @@ def open_schedule_popup(app) -> None:
     ttk.Button(btns, text="Reset", command=lambda: reset_job_form(app)).grid(row=0, column=2, sticky="ew", padx=3)
     ttk.Button(btns, text="Close", command=lambda: _close_schedule_popup(app)).grid(row=0, column=3, sticky="ew", padx=3)
 
-    load_customers(app)
+    app._load_customers()
     load_cleaners(app)
     reset_job_form(app)
 
@@ -555,7 +550,7 @@ def _selected_job_id(app) -> int | None:
 
 def load_jobs(app) -> None:
     app.calendar_jobs_cache = app.calendar_service.list_jobs()
-    refresh_calendar_view(app)
+    app._refresh_calendar_view()
 
 
 def _validate_job_form(app) -> tuple[int, int, str, str, str, str, str]:
@@ -565,7 +560,7 @@ def _validate_job_form(app) -> tuple[int, int, str, str, str, str, str]:
     customer_label = app.job_customer_var.get().strip()
     cleaner_label = app.job_cleaner_var.get().strip()
 
-    if customer_label not in app.calendar_customer_lookup:
+    if customer_label not in app.customer_lookup:
         raise ValueError("Select a customer.")
     if cleaner_label not in app.cleaner_lookup:
         raise ValueError("Select a cleaner.")
@@ -590,7 +585,7 @@ def _validate_job_form(app) -> tuple[int, int, str, str, str, str, str]:
     notes = app.job_notes_text.get("1.0", tk.END).strip()
 
     return (
-        app.calendar_customer_lookup[customer_label],
+        app.customer_lookup[customer_label],
         app.cleaner_lookup[cleaner_label],
         title,
         start_at,
@@ -841,7 +836,7 @@ def quick_rebook_job(app) -> None:
     customer_label = None
     cleaner_label = None
 
-    for label, cid in app.calendar_customer_lookup.items():
+    for label, cid in app.customer_lookup.items():
         if cid == customer_id:
             customer_label = label
             break

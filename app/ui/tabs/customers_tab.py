@@ -3,6 +3,7 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 from datetime import date as date_type
+import re
 
 from app.services.pdf_service import format_usd
 
@@ -155,6 +156,16 @@ def delete_customer(app) -> None:
         messagebox.showwarning("Select", "Select a customer first.")
         return
 
+    customer_id = int(app.customer_id_var.get())
+    unpaid_invoices = app.invoice_service.get_overdue_invoices(customer_id)
+    if unpaid_invoices:
+        unpaid_count = len(unpaid_invoices)
+        if not messagebox.askyesno(
+            "Unpaid Invoices",
+            f"This customer has {unpaid_count} unpaid invoice(s).\n\nDelete anyway?"
+        ):
+            return
+
     if not messagebox.askyesno("Confirm", "Delete selected customer?"):
         return
 
@@ -274,7 +285,6 @@ def load_customers(app) -> None:
 
     customer_labels: list[str] = []
     app.customer_lookup.clear()
-    app.calendar_customer_lookup.clear()
 
     today = date_type.today()
 
@@ -305,11 +315,16 @@ def load_customers(app) -> None:
         label = f"{row['id']} - {row['name']} <{row['email']}>"
         customer_labels.append(label)
         app.customer_lookup[label] = row["id"]
-        app.calendar_customer_lookup[label] = row["id"]
 
     app.invoice_customer_combo["values"] = customer_labels
     if hasattr(app, "job_customer_combo") and app.job_customer_combo.winfo_exists():
         app.job_customer_combo["values"] = customer_labels
+
+
+def _validate_email(email: str) -> bool:
+    """Validate email format using regex."""
+    pattern = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+    return re.match(pattern, email) is not None
 
 
 def _get_customer_form_payload(app) -> dict | None:
@@ -330,6 +345,9 @@ def _get_customer_form_payload(app) -> dict | None:
         return None
     if not email:
         messagebox.showwarning("Validation", "Customer email is required.")
+        return None
+    if not _validate_email(email):
+        messagebox.showwarning("Validation", "Email format is invalid. Use format: user@example.com")
         return None
     if not address:
         messagebox.showwarning("Validation", "Customer address is required.")

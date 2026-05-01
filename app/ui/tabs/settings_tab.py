@@ -2,6 +2,7 @@
 
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
+import re
 
 
 def build_settings_tab(app) -> None:
@@ -124,8 +125,38 @@ def load_settings_into_form(app) -> None:
         app.invoice_tax_rate_var.set(settings.get("default_tax_rate", "0"))
 
 
+def _validate_email(email: str) -> bool:
+    """Validate email format using regex."""
+    pattern = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+    return re.match(pattern, email) is not None
+
+
 def save_settings(app) -> None:
     """Save settings to database."""
+    # Validate SMTP port
+    port_str = app.settings_vars["smtp_port"].get().strip()
+    if port_str:
+        try:
+            port = int(port_str)
+            if port < 1 or port > 65535:
+                messagebox.showwarning("Validation", "SMTP port must be between 1 and 65535.")
+                return
+        except ValueError:
+            messagebox.showwarning("Validation", "SMTP port must be a valid number.")
+            return
+    
+    # Validate email fields
+    business_email = app.settings_vars["business_email"].get().strip()
+    smtp_from_email = app.settings_vars["smtp_from_email"].get().strip()
+    
+    if business_email and not _validate_email(business_email):
+        messagebox.showwarning("Validation", "Business email format is invalid. Use format: user@example.com")
+        return
+    
+    if smtp_from_email and not _validate_email(smtp_from_email):
+        messagebox.showwarning("Validation", "SMTP from email format is invalid. Use format: user@example.com")
+        return
+    
     updates = {key: var.get().strip() for key, var in app.settings_vars.items()}
     updates["business_address"] = app.business_address_text.get("1.0", tk.END).strip()
     updates["payment_instructions"] = app.payment_instructions_text.get("1.0", tk.END).strip()

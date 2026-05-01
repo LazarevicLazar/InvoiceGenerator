@@ -78,17 +78,15 @@ def build_invoice_tab(app) -> None:
 
     app.items_tree = ttk.Treeview(
         items_frame,
-        columns=("description", "unit_price", "line_total"),
+        columns=("description", "unit_price"),
         show="headings",
         height=12,
     )
     app.items_tree.heading("description", text="Description")
-    app.items_tree.heading("unit_price", text="Unit Price")
-    app.items_tree.heading("line_total", text="Line Total")
+    app.items_tree.heading("unit_price", text="Price")
 
-    app.items_tree.column("description", width=620)
+    app.items_tree.column("description", width=740)
     app.items_tree.column("unit_price", width=160, anchor="e")
-    app.items_tree.column("line_total", width=160, anchor="e")
     app.items_tree.grid(row=0, column=0, sticky="nsew")
 
     scroll = ttk.Scrollbar(items_frame, orient="vertical", command=app.items_tree.yview)
@@ -135,7 +133,6 @@ def add_invoice_item(app) -> None:
     app.current_items.append(
         {
             "description": description,
-            "quantity": 1.0,
             "unit_price": rate,
         }
     )
@@ -170,14 +167,13 @@ def refresh_invoice_item_table(app) -> None:
         app.items_tree.delete(item)
 
     for item in app.current_items:
-        line_total = float(item["quantity"]) * float(item["unit_price"])
+        line_total = float(item["unit_price"])
         app.items_tree.insert(
             "",
             tk.END,
             values=(
                 item["description"],
                 format_usd(float(item["unit_price"])),
-                format_usd(line_total),
             ),
         )
 

@@ -79,7 +79,6 @@ class InvoiceGeneratorApp(tk.Tk):
         # Initialize state variables
         self.google_calendar_lookup: dict[str, str] = {}
         self.customer_lookup: dict[str, int] = {}
-        self.calendar_customer_lookup: dict[str, int] = {}
         self.cleaner_lookup: dict[str, int] = {}
         self.current_items: list[dict] = []
         self.calendar_jobs_cache: list[dict] = []
@@ -197,6 +196,11 @@ class InvoiceGeneratorApp(tk.Tk):
     def _load_jobs(self) -> None:
         """Proxy to dialogs.load_jobs."""
         load_jobs(self)
+
+    def _refresh_calendar_view(self) -> None:
+        """Refresh the calendar view with job data."""
+        from app.ui.tabs.calendar_tab import refresh_calendar_view
+        refresh_calendar_view(self)
 
     def _update_selected_job_status(self, status: str) -> None:
         """Proxy to dialogs.update_selected_job_status."""
